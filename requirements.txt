@@ -1,0 +1,15 @@
+streamlit
+torch
+torchvision
+transformers
+facenet-pytorch
+opencv-python
+pillow
+pandas
+imageio
+av
+deepface
+tf-keras
+python-dotenv
+mediapipe
+ultralytics

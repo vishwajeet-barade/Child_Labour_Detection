@@ -1,0 +1,18 @@
+# Ignore virtual environment
+venv/
+
+# Ignore environment variable file
+.env
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore temporary or cache folders
+.vscode/
+.idea/
+
+# Ignore video outputs if you don’t want to push them
+*.mp4
