@@ -13,3 +13,5 @@ tf-keras
 python-dotenv
 mediapipe
 ultralytics
+flask
+flask-cors

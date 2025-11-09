@@ -16,3 +16,5 @@ __pycache__/
 
 # Ignore video outputs if you don’t want to push them
 *.mp4
+*/node_modules/
+env/

@@ -1,0 +1,462 @@
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 3rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-container h1 {
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 3em;
+  width: 100%;
+}
+
+.upload-container {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-area {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 5rem 3rem;
+  background-color: rgba(255, 255, 255, 0.02);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+  max-width: 900px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-area:hover {
+  border-color: rgba(100, 108, 255, 0.5);
+  background-color: rgba(100, 108, 255, 0.05);
+}
+
+.upload-area.dragging {
+  border-color: #646cff;
+  background-color: rgba(100, 108, 255, 0.1);
+  transform: scale(1.02);
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upload-icon {
+  width: 64px;
+  height: 64px;
+  color: #646cff;
+  margin-bottom: 1rem;
+}
+
+.upload-content h2 {
+  margin: 0;
+  font-size: 1.5em;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.upload-content p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.file-types {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.5rem;
+}
+
+.upload-button {
+  margin-top: 1rem;
+  padding: 0.75em 2em;
+  font-size: 1em;
+  font-weight: 600;
+  background-color: #646cff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-button:hover {
+  background-color: #535bf2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+/* Processing/Loading Styles */
+.processing-container {
+  border: 2px solid rgba(100, 108, 255, 0.3);
+  border-radius: 12px;
+  padding: 5rem 3rem;
+  background-color: rgba(100, 108, 255, 0.05);
+  width: 100%;
+  max-width: 900px;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.processing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(100, 108, 255, 0.2);
+  border-top-color: #646cff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.processing-content h2 {
+  margin: 0;
+  font-size: 1.8em;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.processing-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1em;
+  margin: 0;
+}
+
+.progress-bar-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #646cff, #535bf2);
+  border-radius: 6px;
+  transition: width 0.1s ease;
+  box-shadow: 0 0 10px rgba(100, 108, 255, 0.5);
+}
+
+.progress-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.processing-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 1rem;
+}
+
+.processing-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.processing-step.completed {
+  background-color: rgba(100, 108, 255, 0.15);
+  border-color: rgba(100, 108, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.processing-step.completed .step-icon {
+  color: #646cff;
+  font-weight: bold;
+}
+
+.step-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.processing-step.completed .step-icon {
+  opacity: 1;
+}
+
+.video-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  align-items: center;
+}
+
+.video-preview {
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 1000px;
+}
+
+.preview-video {
+  width: 100%;
+  max-height: 600px;
+  display: block;
+  margin: 0 auto;
+}
+
+.video-info {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.video-info h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 1.3em;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 1rem;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.info-value {
+  color: rgba(255, 255, 255, 0.9);
+  word-break: break-all;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.remove-button,
+.change-button {
+  padding: 0.75em 2em;
+  font-size: 1em;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.remove-button {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.remove-button:hover {
+  background-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}
+
+.change-button {
+  background-color: #646cff;
+  color: white;
+}
+
+.change-button:hover {
+  background-color: #535bf2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+@media (prefers-color-scheme: light) {
+  .app-container h1 {
+    color: #213547;
+  }
+
+  .upload-area {
+    border-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  .upload-area:hover {
+    border-color: rgba(100, 108, 255, 0.5);
+    background-color: rgba(100, 108, 255, 0.05);
+  }
+
+  .upload-content h2 {
+    color: #213547;
+  }
+
+  .upload-content p {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .file-types {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .processing-container {
+    border-color: rgba(100, 108, 255, 0.3);
+    background-color: rgba(100, 108, 255, 0.05);
+  }
+
+  .processing-content h2 {
+    color: #213547;
+  }
+
+  .processing-text {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .progress-bar {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .progress-text {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .processing-step {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .processing-step.completed {
+    background-color: rgba(100, 108, 255, 0.1);
+    border-color: rgba(100, 108, 255, 0.2);
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .video-info {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .video-info h3 {
+    color: #213547;
+  }
+
+  .info-label {
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .info-value {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .info-row {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 2rem 1rem;
+    min-height: 100vh;
+  }
+
+  .app-container h1 {
+    font-size: 2em;
+    margin-bottom: 1.5rem;
+  }
+
+  .upload-area {
+    padding: 3rem 1.5rem;
+    min-height: 300px;
+  }
+
+  .processing-container {
+    padding: 3rem 1.5rem;
+    min-height: 400px;
+  }
+
+  .video-info {
+    padding: 1.5rem;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .remove-button,
+  .change-button {
+    width: 100%;
+  }
+
+  .preview-video {
+    max-height: 400px;
+  }
+}

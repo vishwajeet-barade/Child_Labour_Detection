@@ -69,11 +69,36 @@ def find_face_model(model_dir):
         return "tf", pb, pbtxt
     return None, None, None # Simplified for brevity
 
+def check_cuda_backend_available():
+    """Check if CUDA backend is available for OpenCV DNN"""
+    try:
+        backends = cv2.dnn.getAvailableBackends()
+        # Check if CUDA backend is in the available backends
+        has_cuda = cv2.dnn.DNN_BACKEND_CUDA in backends
+        if has_cuda:
+            # Also check if CUDA target is available
+            targets = cv2.dnn.getAvailableTargets(cv2.dnn.DNN_BACKEND_CUDA)
+            has_cuda_target = cv2.dnn.DNN_TARGET_CUDA in targets
+            return has_cuda_target
+        return False
+    except:
+        return False
+
 def load_face_net(model_dir):
     kind, p1, p2 = find_face_model(model_dir)
     if kind == "tf":
         print(f"[INFO] Using TensorFlow face detector.")
         net = cv2.dnn.readNetFromTensorflow(p1, p2)
+        # Try to use CUDA backend for GPU acceleration if available
+        if check_cuda_backend_available():
+            try:
+                net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+                net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+                print(f"[INFO] Face detector using CUDA GPU acceleration")
+            except Exception as e:
+                print(f"[INFO] Face detector using CPU (CUDA setup failed: {e})")
+        else:
+            print(f"[INFO] Face detector using CPU (CUDA backend not available in OpenCV)")
         return net
     else:
         raise FileNotFoundError("No TF face detector found in model dir.")
@@ -82,7 +107,16 @@ def load_caffe_net(proto_path, model_path, name="net"):
     if not os.path.exists(proto_path) or not os.path.exists(model_path):
         raise FileNotFoundError(f"Model files not found for {name}")
     net = cv2.dnn.readNetFromCaffe(proto_path, model_path)
-    print(f"[INFO] Loaded {name}")
+    # Try to use CUDA backend for GPU acceleration if available
+    if check_cuda_backend_available():
+        try:
+            net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+            net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+            print(f"[INFO] Loaded {name} with CUDA GPU acceleration")
+        except Exception as e:
+            print(f"[INFO] Loaded {name} using CPU (CUDA setup failed: {e})")
+    else:
+        print(f"[INFO] Loaded {name} using CPU (CUDA backend not available in OpenCV)")
     return net
 
 def load_action_model():
@@ -120,11 +154,45 @@ def main(video_source=0, model_dir=DEFAULT_MODEL_DIR, out_path=None, conf_thresh
     
     writer = None
     if out_path:
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
         w, h = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        writer = cv2.VideoWriter(out_path, fourcc, fps, (w, h))
-        print(f"[INFO] Writing output to {out_path}")
+        
+        # Try different codecs in order of preference
+        codecs = [
+            ('mp4v', 'MP4V'),
+            ('XVID', 'XVID'),
+            ('MJPG', 'Motion JPEG'),
+            ('X264', 'X264'),
+        ]
+        
+        writer = None
+        for codec_name, codec_desc in codecs:
+            try:
+                fourcc = cv2.VideoWriter_fourcc(*codec_name)
+                writer = cv2.VideoWriter(out_path, fourcc, fps, (w, h))
+                if writer and writer.isOpened():
+                    print(f"[INFO] Using codec: {codec_desc} ({codec_name})")
+                    print(f"[INFO] Writing output to {out_path}")
+                    break
+                else:
+                    if writer:
+                        writer.release()
+                    writer = None
+            except Exception as e:
+                print(f"[WARNING] Failed to initialize {codec_desc} codec: {e}")
+                if writer:
+                    writer.release()
+                writer = None
+        
+        if not writer or not writer.isOpened():
+            # Last resort: use mp4v (may not be browser-compatible)
+            print(f"[WARNING] Falling back to mp4v codec (may not be browser-compatible)")
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            writer = cv2.VideoWriter(out_path, fourcc, fps, (w, h))
+            if writer and writer.isOpened():
+                print(f"[INFO] Writing output to {out_path}")
+            else:
+                raise RuntimeError("Failed to initialize video writer with any codec")
 
     # --- NEW: Action detection variables ---
     frame_buffer = deque(maxlen=CLIP_LENGTH)
@@ -207,19 +275,106 @@ def main(video_source=0, model_dir=DEFAULT_MODEL_DIR, out_path=None, conf_thresh
             action_text = f"Action: {last_detected_action}"
             cv2.putText(frame, action_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 0), 2, cv2.LINE_AA)
 
-            cv2.imshow("Age, Gender & Action Detection", frame)
+            # Only display if running interactively (not in API mode)
+            # Comment out for headless server mode
+            # cv2.imshow("Age, Gender & Action Detection", frame)
             if writer:
                 writer.write(frame)
 
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
-                break
+            # key = cv2.waitKey(1) & 0xFF
+            # if key == ord('q'):
+            #     break
     finally:
         cap.release()
         if writer:
             writer.release()
-        cv2.destroyAllWindows()
+            # Ensure video file is properly flushed
+            time.sleep(0.2)  # Small delay to ensure file is written
+            
+            # Re-encode video to H.264 for browser compatibility
+            if out_path and os.path.exists(out_path):
+                try:
+                    reencode_video_for_browser(out_path)
+                except Exception as e:
+                    print(f"[WARNING] Could not re-encode video for browser: {e}")
+                    print("[INFO] Video saved but may not be browser-compatible")
+        # cv2.destroyAllWindows()  # Not needed in headless mode
         print("[INFO] Finished.")
+
+def reencode_video_for_browser(input_path):
+    """Re-encode video to H.264 using FFmpeg for browser compatibility"""
+    import subprocess
+    import tempfile
+    
+    # Check if FFmpeg is available
+    try:
+        subprocess.run(['ffmpeg', '-version'], 
+                      capture_output=True, 
+                      check=True, 
+                      timeout=5)
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        print("[INFO] FFmpeg not available, skipping re-encoding")
+        return
+    
+    # Create temporary file for re-encoded video (in same directory)
+    # Use .mp4 extension so FFmpeg can determine the format
+    input_dir = os.path.dirname(input_path)
+    input_basename = os.path.basename(input_path)
+    name_without_ext = os.path.splitext(input_basename)[0]
+    temp_path = os.path.join(input_dir, name_without_ext + '_reencoded.mp4')
+    
+    # Use absolute paths and normalize
+    input_path_abs = os.path.abspath(input_path)
+    temp_path_abs = os.path.abspath(temp_path)
+    
+    try:
+        # Re-encode to H.264 (libx264) with browser-compatible settings
+        cmd = [
+            'ffmpeg', '-y',  # Overwrite output file
+            '-i', input_path_abs,
+            '-c:v', 'libx264',           # H.264 codec
+            '-preset', 'medium',          # Encoding speed
+            '-crf', '23',                 # Quality (lower = better quality)
+            '-pix_fmt', 'yuv420p',        # Pixel format for maximum compatibility
+            '-c:a', 'aac',                # Audio codec
+            '-b:a', '192k',               # Audio bitrate
+            '-movflags', '+faststart',     # Enable streaming (move metadata to beginning)
+            temp_path_abs
+        ]
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 minute timeout
+        )
+        
+        if result.returncode == 0 and os.path.exists(temp_path):
+            # Replace original with re-encoded version
+            os.replace(temp_path, input_path)
+            print("[INFO] Video re-encoded to H.264 for browser compatibility")
+        else:
+            error_msg = result.stderr if result.stderr else result.stdout
+            print(f"[WARNING] FFmpeg re-encoding failed: {error_msg[:200]}")  # Show first 200 chars
+            if os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except:
+                    pass
+    except subprocess.TimeoutExpired:
+        print("[WARNING] FFmpeg re-encoding timed out")
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+    except Exception as e:
+        print(f"[WARNING] Error during re-encoding: {e}")
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except:
+                pass
 
 # -------------------
 # CLI
